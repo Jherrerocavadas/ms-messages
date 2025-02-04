@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -13,7 +12,7 @@ import java.util.UUID;
 @Data
 @Builder
 public class StandardExceptionResponseDTO {
-    private LocalDateTime timestamp;
+    private String timestamp;
     private Integer statusCode;
     private String error;
     private String message;

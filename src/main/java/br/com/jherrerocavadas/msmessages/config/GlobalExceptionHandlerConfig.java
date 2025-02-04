@@ -2,6 +2,7 @@ package br.com.jherrerocavadas.msmessages.config;
 
 import br.com.jherrerocavadas.msmessages.exception.dto.StandardExceptionResponseDTO;
 import br.com.jherrerocavadas.msmessages.exception.throwable.SendEmailException;
+import br.com.jherrerocavadas.msmessages.exception.throwable.UnauthorizedAcessException;
 import ch.qos.logback.core.model.processor.ProcessorException;
 import feign.FeignException;
 import org.apache.coyote.BadRequestException;
@@ -21,7 +22,7 @@ public class GlobalExceptionHandlerConfig extends ResponseEntityExceptionHandler
     public ResponseEntity<StandardExceptionResponseDTO> handleException(Exception ex){
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .body(StandardExceptionResponseDTO.builder()
-                        .timestamp(LocalDateTime.now())
+                        .timestamp(LocalDateTime.now().toString())
                         .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .error("Erro interno")
                         .message(ex.getMessage())
@@ -33,7 +34,7 @@ public class GlobalExceptionHandlerConfig extends ResponseEntityExceptionHandler
         logger.error(ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .body(StandardExceptionResponseDTO.builder()
-                        .timestamp(LocalDateTime.now())
+                        .timestamp(LocalDateTime.now().toString())
                         .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .error("Erro ao processar a requisição")
                         .message("Ocorreu um erro interno ao processar a requisição")
@@ -44,7 +45,7 @@ public class GlobalExceptionHandlerConfig extends ResponseEntityExceptionHandler
     public ResponseEntity<StandardExceptionResponseDTO> handleBadRequestException(BadRequestException ex){
         return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
                 .body(StandardExceptionResponseDTO.builder()
-                        .timestamp(LocalDateTime.now())
+                        .timestamp(LocalDateTime.now().toString())
                         .statusCode(HttpStatus.BAD_REQUEST.value())
                         .error("Requisição inválida")
                         .message(ex.getMessage())
@@ -56,7 +57,7 @@ public class GlobalExceptionHandlerConfig extends ResponseEntityExceptionHandler
     public ResponseEntity<StandardExceptionResponseDTO> handleNotFoundException(HttpServerErrorException.InternalServerError ex){
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .body(StandardExceptionResponseDTO.builder()
-                        .timestamp(LocalDateTime.now())
+                        .timestamp(LocalDateTime.now().toString())
                         .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .error("Erro ao processar a requisição")
                         .message(ex.getMessage())
@@ -67,7 +68,7 @@ public class GlobalExceptionHandlerConfig extends ResponseEntityExceptionHandler
     public ResponseEntity<StandardExceptionResponseDTO> handleProcessorException(ProcessorException ex){
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .body(StandardExceptionResponseDTO.builder()
-                        .timestamp(LocalDateTime.now())
+                        .timestamp(LocalDateTime.now().toString())
                         .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .error("Erro de processamento")
                         .message(ex.getMessage())
@@ -78,22 +79,42 @@ public class GlobalExceptionHandlerConfig extends ResponseEntityExceptionHandler
     public ResponseEntity<StandardExceptionResponseDTO> handleSendEmailException(SendEmailException ex){
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .body(StandardExceptionResponseDTO.builder()
-                        .timestamp(LocalDateTime.now())
+                        .timestamp(LocalDateTime.now().toString())
                         .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .error("Erro ao enviar email")
                         .message(ex.getMessage())
                         .build());
     }
 
-//TODO: Extrair mensagem de erro
+//TODO: Extrair mensagem de erro melhor
     @ExceptionHandler({FeignException.class})
     public ResponseEntity<StandardExceptionResponseDTO> handleFeignException(FeignException ex){
-        return ResponseEntity.status(ex.status())
+        int statusCode = ex.status()!=-1 ?ex.status():HttpStatus.INTERNAL_SERVER_ERROR.value();
+        var localizedMessage = ex.getLocalizedMessage();
+        var errorText = "Erro Interno";
+        var messageText = localizedMessage;
+        if(localizedMessage.contains("message")){
+            var splittedMessage = localizedMessage.split("message", localizedMessage.length()-1);
+            errorText = splittedMessage[0];
+            messageText = splittedMessage[1];
+        }
+        return ResponseEntity.status(statusCode)
                 .body(StandardExceptionResponseDTO.builder()
-                        .timestamp(LocalDateTime.now())
-                        .statusCode(ex.status())
-                        .error(ex.getLocalizedMessage())
-                        .message(ex.getLocalizedMessage())
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(statusCode)
+                        .error(errorText)
+                        .message(messageText)
+                        .build());
+    }
+
+    @ExceptionHandler({UnauthorizedAcessException.class})
+    public ResponseEntity<StandardExceptionResponseDTO> handleUnauthorizedAcessException(UnauthorizedAcessException ex){
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED.value())
+                .body(StandardExceptionResponseDTO.builder()
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.UNAUTHORIZED.value())
+                        .error("Acesso não autorizado")
+                        .message(ex.getMessage())
                         .build());
     }
 

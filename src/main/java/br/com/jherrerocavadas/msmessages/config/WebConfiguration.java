@@ -31,15 +31,15 @@ public class WebConfiguration {
             }
             @Override
             public void addInterceptors(InterceptorRegistry registry) {
-                registry.addInterceptor(interceptor).addPathPatterns("/**").
-                        excludePathPatterns(
-                                "/v2/api-docs",
-                                "/v3/api-docs",
+                registry.addInterceptor(interceptor).addPathPatterns("/**")
+                                .excludePathPatterns(
+                                "/v2/api-docs/**",
+                                "/v3/api-docs/**",
                                 "/swagger-resources/**",
-                                "/swagger-ui/**",
                                 "/swagger-ui.html",
+                                "/swagger-ui/**",
                                 "/webjars/**"
-                        );
+                                );
             }
         };
     }
